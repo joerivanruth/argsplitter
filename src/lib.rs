@@ -1,5 +1,3 @@
-#![allow(dead_code, unused_imports, unused_import_braces)]
-
 use std::ffi::{OsStr, OsString};
 
 mod argerror;

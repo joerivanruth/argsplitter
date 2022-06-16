@@ -1,8 +1,13 @@
+#![allow(dead_code)]
+// Allow dead_code because on Unix, the Windows versions are not used
+// and vice versa.
+
 // Import both the Unix- and the Windows versions.
 // Most of the Windows code can be tested even on Unix.
 mod unix;
 mod windows;
 
+#[cfg(test)]
 use std::ffi::OsString;
 
 #[cfg(unix)]

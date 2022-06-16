@@ -1,6 +1,6 @@
 use std::{ffi::OsString, fmt};
 
-use crate::{ArgError, ForceUnicode};
+use crate::ArgError;
 
 #[cfg(doc)]
 use crate::{core::Core, Splitter};
