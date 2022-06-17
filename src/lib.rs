@@ -1,5 +1,7 @@
 use std::ffi::{OsStr, OsString};
 
+pub mod main_support;
+
 mod argerror;
 mod core;
 mod item;

@@ -24,6 +24,9 @@ pub enum ArgError {
     ArgumentMissing(String),
     /// For use by user code
     ErrorMessage(String),
+    /// Not a real error, application should print usage info and exit
+    /// succesfully
+    ExitSuccessfully,
 }
 
 impl fmt::Display for ArgError {
@@ -42,6 +45,9 @@ impl fmt::Display for ArgError {
             ParameterMissing(flag) => write!(f, "parameter missing for flag `{}`", flag),
             ArgumentMissing(desc) => write!(f, "missing argument: {desc}"),
             ErrorMessage(msg) => write!(f, "{}", msg),
+            ExitSuccessfully => {
+                write!(f, "no error")
+            }
         }
     }
 }
@@ -59,5 +65,9 @@ impl ArgError {
 
     pub fn unexpected_argument(arg: impl AsRef<OsStr>) -> Self {
         ArgError::UnexpectedArgument(arg.as_ref().to_owned())
+    }
+
+    pub fn exit_successfully() -> Self {
+        ArgError::ExitSuccessfully
     }
 }
