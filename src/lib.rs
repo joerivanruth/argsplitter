@@ -10,7 +10,7 @@ mod splitter;
 
 pub use argerror::ArgError;
 pub use item::{Item, ItemOs};
-pub use splitter::Splitter;
+pub use splitter::ArgSplitter;
 
 trait ForceUnicode {
     type Forced;

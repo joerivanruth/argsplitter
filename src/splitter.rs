@@ -8,19 +8,19 @@ use crate::{core::Core, item::OwnedItem, ArgError, ForceUnicode, Item, ItemOs};
 type AResult<T> = Result<T, ArgError>;
 
 #[derive(Debug, Clone)]
-pub struct Splitter {
+pub struct ArgSplitter {
     pub argv0: Option<OsString>,
     core: Core,
     last_flag: Option<String>,
     stashed_args: Vec<OsString>,
 }
 
-impl Splitter {
+impl ArgSplitter {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let mut args = env::args_os();
         let argv0 = args.next();
-        let mut splitter = Splitter::from(args);
+        let mut splitter = ArgSplitter::from(args);
         splitter.argv0 = argv0;
         splitter
     }
@@ -28,7 +28,7 @@ impl Splitter {
     pub fn from<S: AsRef<OsStr>>(args: impl IntoIterator<Item = S>) -> Self {
         let vec = args.into_iter().map(|s| s.as_ref().to_owned()).collect();
         let core = Core::new(vec);
-        Splitter {
+        ArgSplitter {
             argv0: None,
             core,
             last_flag: None,
@@ -41,7 +41,7 @@ impl Splitter {
     }
 }
 
-impl Splitter {
+impl ArgSplitter {
     pub fn item_os(&mut self) -> AResult<Option<ItemOs>> {
         self.last_flag = None;
 
@@ -94,7 +94,7 @@ impl Splitter {
     }
 }
 
-impl Splitter {
+impl ArgSplitter {
     pub fn flag(&mut self) -> AResult<Option<&str>> {
         loop {
             let w = match self.item_os()? {
@@ -140,7 +140,7 @@ mod tests {
     #[test]
     fn test_empty() {
         let empty: Vec<OsString> = vec![];
-        let mut sp = Splitter::from(empty);
+        let mut sp = ArgSplitter::from(empty);
 
         assert_eq!(sp.has_param_attached(), false);
 
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn test_split_short() {
-        let mut sp = Splitter::from(["-vx", "-n", "ARGS"]);
+        let mut sp = ArgSplitter::from(["-vx", "-n", "ARGS"]);
 
         assert_eq!(sp.has_param_attached(), false);
 
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn test_split_long() {
-        let mut sp = Splitter::from(["--foo", "--bar=BAR", "--baz", "ARGS"]);
+        let mut sp = ArgSplitter::from(["--foo", "--bar=BAR", "--baz", "ARGS"]);
 
         assert_eq!(sp.has_param_attached(), false);
 

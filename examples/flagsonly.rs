@@ -1,13 +1,13 @@
 use std::{error::Error, path::PathBuf};
 
-use argsplitter::{ItemOs, Splitter};
+use argsplitter::{ArgSplitter, ItemOs};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut verbose = false;
     let mut files: Vec<PathBuf> = vec![];
     let mut mode = "default".to_string();
 
-    let mut args = Splitter::new();
+    let mut args = ArgSplitter::new();
 
     use ItemOs::*;
     while let Some(item) = args.item_os()? {

@@ -3,7 +3,7 @@ use std::{ffi::OsString, fmt};
 use crate::ArgError;
 
 #[cfg(doc)]
-use crate::{core::Core, Splitter};
+use crate::{core::Core, ArgSplitter};
 
 /**
  * Item returned from [`Core::take_item`]
@@ -18,7 +18,7 @@ pub enum OwnedItem {
 }
 
 /**
-Item returned from [`Splitter::item_os`]
+Item returned from [`ArgSplitter::item_os`]
 */
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemOs<'a> {
@@ -27,7 +27,7 @@ pub enum ItemOs<'a> {
 }
 
 /**
-Item returned from [`Splitter::item`]
+Item returned from [`ArgSplitter::item`]
 */
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Item<'a> {

@@ -2,7 +2,7 @@ use std::{error, ffi::OsString};
 use std::{ffi::OsStr, fmt};
 
 #[cfg(doc)]
-use super::Splitter;
+use super::ArgSplitter;
 /**
 Error type for ``Splitter`].
 */
@@ -11,13 +11,13 @@ Error type for ``Splitter`].
 pub enum ArgError {
     /// Argument could not be decoded as valid Unicode.
     InvalidUnicode(OsString),
-    /// Returned by [`Splitter::item`] and [`Splitter::item_os`]
+    /// Returned by [`ArgSplitter::item`] and [`ArgSplitter::item_os`]
     /// if the previous long option has a parameter which has not been
-    /// retrieved with [`Splitter::param`], for example `--fruit=banana`.
+    /// retrieved with [`ArgSplitter::param`], for example `--fruit=banana`.
     UnexpectedParameter(String),
     /// Argument was
     UnexpectedArgument(OsString),
-    /// Returned by [`Splitter::param`] and [`Splitter::param_os`]
+    /// Returned by [`ArgSplitter::param`] and [`ArgSplitter::param_os`]
     /// if no parameter is available, for example on `-f` in  `-f -v`.
     ParameterMissing(String),
     /// if a required argument is missing.

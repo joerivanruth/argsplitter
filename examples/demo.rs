@@ -1,4 +1,4 @@
-use argsplitter::{main_support::handle_argerror, ArgError, Splitter};
+use argsplitter::{main_support::handle_argerror, ArgError, ArgSplitter};
 use std::{error::Error, path::PathBuf, process::ExitCode};
 
 const USAGE: &str = r###"
@@ -28,9 +28,9 @@ fn main_program() -> Result<(), Box<dyn Error>> {
     let mut source: Option<Source> = None;
     let dest: PathBuf;
 
-    let mut args = Splitter::new();
+    let mut argsplitter = ArgSplitter::new();
 
-    while let Some(f) = args.flag()? {
+    while let Some(f) = argsplitter.flag()? {
         match f {
             "-h" | "help" => {
                 // to stdout
@@ -38,17 +38,17 @@ fn main_program() -> Result<(), Box<dyn Error>> {
                 return Err(ArgError::ExitSuccessfully)?;
             }
             "-v" | "--verbose" => verbose = true,
-            "-f" | "--file" => source = Some(Source::File(args.param_os()?.into())),
+            "-f" | "--file" => source = Some(Source::File(argsplitter.param_os()?.into())),
             f => return Err(ArgError::unknown_flag(f))?,
         }
     }
 
     if source.is_none() {
-        let msg = args.stashed("MESSAGE")?;
+        let msg = argsplitter.stashed("MESSAGE")?;
         source = Some(Source::Str(msg));
     }
-    dest = args.stashed_os("OUTFILE")?.into();
-    args.verify_no_more_stashed()?;
+    dest = argsplitter.stashed_os("OUTFILE")?.into();
+    argsplitter.verify_no_more_stashed()?;
 
     println!("Hello! verbose={verbose} source={source:?} dest={dest:?}");
     Ok(())

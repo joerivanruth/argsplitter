@@ -1,4 +1,4 @@
-use argsplitter::{ArgError, Splitter};
+use argsplitter::{ArgError, ArgSplitter};
 use std::{error::Error, path::PathBuf, process::ExitCode};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -22,7 +22,7 @@ fn work() -> Result<(), Box<dyn Error>> {
     let mut src: Option<Source> = None;
     let dest: Option<PathBuf>;
 
-    let mut args = Splitter::new();
+    let mut args = ArgSplitter::new();
 
     // args.flag stashes any non-flag arguments in a buffer
     while let Some(flag) = args.flag()? {
