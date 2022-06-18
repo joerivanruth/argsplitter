@@ -21,88 +21,116 @@ generating help text. Instead, it only provides the following services:
 # Example
 
 The program below either wants to get two arguments `infile` and `outfile`,
-or only `outfile` plus a flag `--source <some text>`. It also supports 
+or only `outfile` plus a flag `--source <some text>`. It also supports
 `--verbose`, and abbreviations `-s` and `-v`.
 
 ```rust
-use argsplitter::{ArgError, Splitter};
+use argsplitter::{main_support::handle_argerror, ArgError, ArgSplitter};
 use std::{error::Error, path::PathBuf, process::ExitCode};
 
-#[derive(Debug, PartialEq, Eq)]
+const USAGE: &str = r###"
+Usage: demo OPTIONS [MESSAGE] OUTFILE
+Arguments:
+    MESSAGE             Message to write, only if --file not given
+    OUTFILE             File to write message to
+Options:
+    -v --verbose        Be chatty
+    -f --file=INFILE	File to read message from, only if MESSAGE not given
+    -h --help           Show this help
+"###;
+
+fn main() -> ExitCode {
+    let ret = main_program();
+    handle_argerror(USAGE, ret).unwrap_or(ExitCode::FAILURE)
+}
+
+#[derive(Debug)]
 enum Source {
-    Text(String),
+    Str(String),
     File(PathBuf),
 }
 
-fn main() -> ExitCode {
-    match work() {
-        Ok(_) => ExitCode::SUCCESS,
-        Err(e) => {
-            eprintln!("Error: {e}");
-            ExitCode::FAILURE
-        }
-    }
-}
-
-fn work() -> Result<(), Box<dyn Error>> {
+fn main_program() -> Result<(), Box<dyn Error>> {
     let mut verbose = false;
-    let mut src: Option<Source> = None;
-    let dest: Option<PathBuf>;
+    let mut source: Option<Source> = None;
+    let dest: PathBuf;
 
-    let mut args = Splitter::new();
+    let mut argsplitter = ArgSplitter::new();
 
-    // args.flag stashes any non-flag arguments in a buffer
-    while let Some(flag) = args.flag()? {
-        match flag {
+    while let Some(f) = argsplitter.flag()? {
+        match f {
+            "-h" | "help" => {
+                // to stdout
+                println!("{}", USAGE.trim());
+                return Err(ArgError::ExitSuccessfully)?;
+            }
             "-v" | "--verbose" => verbose = true,
-            "-s" | "--source" => src = Some(Source::Text(args.param()?)),
-            a => return Err(ArgError::unexpected_argument(a))?,
+            "-f" | "--file" => source = Some(Source::File(argsplitter.param_os()?.into())),
+            f => return Err(ArgError::unknown_flag(f))?,
         }
     }
 
-    // args.stashed_os() returns a stashed argument as an Ok(OsString)
-    if src.is_none() {
-        let arg = args.stashed_os("source or infile")?;
-        src = Some(Source::File(arg.into()));
+    if source.is_none() {
+        let msg = argsplitter.stashed("MESSAGE")?;
+        source = Some(Source::Str(msg));
     }
-    dest = Some(args.stashed_os("outfile")?.into());
-    args.verify_no_more_stashed()?;
+    dest = argsplitter.stashed_os("OUTFILE")?.into();
+    argsplitter.verify_no_more_stashed()?;
 
-    println!("Verbose={verbose} source={src:?} dest={dest:?}");
+    println!("Hello! verbose={verbose} source={source:?} dest={dest:?}");
     Ok(())
 }
 ```
 
+# Example output
+
+```
+» cargo run -q --example=demo -- -h
+-- stdout --
+Usage: demo OPTIONS [MESSAGE] OUTFILE
+Arguments:
+    MESSAGE             Message to write, only if --file not given
+    OUTFILE             File to write message to
+Options:
+    -v --verbose        Be chatty
+    -f --file=INFILE	File to read message from, only if MESSAGE not given
+    -h --help           Show this help
+```
+
 Without any arguments it complains:
 ```
-» cargo run --example=twoargs
+» cargo run -q --example=twoargs
+-- stderr --
 Error: missing argument: source or infile
+-- exit status 1
 ```
+
 
 When given two arguments it is happy:
 ```
-»  cargo run --example=twoargs left right
+» cargo run -q --example=twoargs left right
+-- stdout --
 Verbose=false source=Some(File("left")) dest=Some("right")
 ```
 
 It notices "verbose":
 ```
-» cargo run --example=twoargs left -v right
+» cargo run -q --example=twoargs left -v right
+-- stdout --
 Verbose=true source=Some(File("left")) dest=Some("right")
 ```
 
 Instead of `infile` you can pass `-s SOMETHING` or `--source SOMETHING`:
 ```
-» cargo run --example=twoargs  right -s some-text
+» cargo run -q --example=twoargs  right -s some-text
+-- stdout --
 Verbose=false source=Some(Text("some-text")) dest=Some("right")
 ```
 
 Superfluous arguments are detected by the call to `args.verify_no_more_stashed()`:
 ```
-» cargo run --example=twoargs  right -s some-text extra
+» cargo run -q --example=twoargs  right -s some-text extra
+-- stderr --
 Error: unexpected argument: `extra`
-»  cargo run --example=twoargs  right -s some-text -x
-Error: unexpected argument: `-x`
-»  cargo run --example=twoargs  right -s some-text --verbose=please
-Error: unexpected parameter for flag `--verbose`
+-- exit status 1
 ```
