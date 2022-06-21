@@ -65,6 +65,10 @@ impl ArgSplitter {
         self.item_os().force_unicode()
     }
 
+    pub fn at_word(&self) -> bool {
+        self.core.at_word()
+    }
+
     pub fn has_param_attached(&self) -> bool {
         self.core.param_ready()
     }
