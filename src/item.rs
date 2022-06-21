@@ -5,34 +5,32 @@ use crate::ArgError;
 #[cfg(doc)]
 use crate::{core::Core, ArgSplitter};
 
-/**
- * Item returned from [`Core::take_item`]
- */
+/// * Item returned from [`Core::take_item`]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OwnedItem {
-    /// Long option such as --verbose or --file=data.csv
-    Flag(String),
     /// An argument that didn't start with a dash, or the two special cases
     /// `"-"` and `"--"`
     Word(OsString),
+    /// Long option such as --verbose or --file=data.csv
+    Flag(String),
 }
 
-/**
-Item returned from [`ArgSplitter::item_os`]
-*/
+/// Item returned from [`ArgSplitter::item_os`]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemOs<'a> {
-    Flag(&'a str),
+    /// An argument that does not start with a dash
     Word(OsString),
+    /// A short flag `-f` or a long flag `--file`. Includes the leading dashes.
+    Flag(&'a str),
 }
 
-/**
-Item returned from [`ArgSplitter::item`]
-*/
+/// Item returned from [`ArgSplitter::item`]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Item<'a> {
-    Flag(&'a str),
+    /// An argument that does not start with a dash
     Word(String),
+    /// A short flag `-f` or a long flag `--file`. Includes the leading dashes.
+    Flag(&'a str),
 }
 
 impl fmt::Display for Item<'_> {
@@ -54,6 +52,8 @@ impl fmt::Display for ItemOs<'_> {
 }
 
 impl ItemOs<'_> {
+    /// Return [`ArgError::UnexpectedFlag`] or [`ArgError::UnexpectedArgument`]
+    /// depending on the type of item.
     pub fn unexpected(&self) -> ArgError {
         match self {
             ItemOs::Flag(f) => ArgError::unknown_flag(f),
@@ -63,6 +63,8 @@ impl ItemOs<'_> {
 }
 
 impl Item<'_> {
+    /// Return [`ArgError::UnexpectedFlag`] or [`ArgError::UnexpectedArgument`]
+    /// depending on the type of item.
     pub fn unexpected(&self) -> ArgError {
         match self {
             Item::Flag(f) => ArgError::unknown_flag(f),
