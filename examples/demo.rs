@@ -14,7 +14,7 @@ Options:
 
 fn main() -> ExitCode {
     let ret = main_program();
-    main_support::print_any_errors(USAGE, ret)
+    main_support::report_errors(USAGE, ret)
 }
 
 #[derive(Debug)]

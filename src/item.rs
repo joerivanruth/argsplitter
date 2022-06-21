@@ -54,21 +54,19 @@ impl fmt::Display for ItemOs<'_> {
 }
 
 impl ItemOs<'_> {
-    pub fn unexpected(&self) -> Result<(), ArgError> {
-        let err = match self {
+    pub fn unexpected(&self) -> ArgError {
+        match self {
             ItemOs::Flag(f) => ArgError::unknown_flag(f),
             ItemOs::Word(w) => ArgError::unexpected_argument(w),
-        };
-        Err(err)
+        }
     }
 }
 
 impl Item<'_> {
-    pub fn unexpected(&self) -> Result<(), ArgError> {
-        let err = match self {
+    pub fn unexpected(&self) -> ArgError {
+        match self {
             Item::Flag(f) => ArgError::unknown_flag(f),
             Item::Word(w) => ArgError::unexpected_argument(w),
-        };
-        Err(err)
+        }
     }
 }

@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Word(w) => files.push(w.into()),
             Flag("-v" | "--verbose") => verbose = true,
             Flag("-m" | "--mode") => mode = args.param()?,
-            a => a.unexpected()?,
+            a => return Err(a.unexpected())?,
         }
     }
 
