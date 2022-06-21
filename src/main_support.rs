@@ -37,16 +37,26 @@ where
             eprintln!("{}", usage.trim());
             Ok(ExitCode::FAILURE)
         }
-        None => {
+        None => Err(err),
+    }
+}
+
+pub fn print_any_errors<E>(usage: &str, result: Result<(), E>) -> ExitCode
+where
+    E: Borrow<dyn Error> + 'static,
+{
+    match handle_argerror(usage, result) {
+        Ok(code) => code,
+        Err(err) => {
             // Print the whole source-chain
-            eprintln!("Error: {}", borrowed);
-            let mut s = borrowed.source();
-            while let Some(e) = s {
+            let mut cur: &dyn Error = err.borrow();
+            eprintln!("Error: {}", cur);
+            while let Some(e) = cur.source() {
                 eprintln!("caused by:");
                 eprintln!("    {}", e);
-                s = e.source();
+                cur = e;
             }
-            Err(err)
+            ExitCode::FAILURE
         }
     }
 }

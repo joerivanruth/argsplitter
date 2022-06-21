@@ -1,4 +1,4 @@
-use argsplitter::{main_support::handle_argerror, ArgError, ArgSplitter};
+use argsplitter::{main_support, ArgError, ArgSplitter};
 use std::{error::Error, path::PathBuf, process::ExitCode};
 
 const USAGE: &str = r###"
@@ -14,7 +14,7 @@ Options:
 
 fn main() -> ExitCode {
     let ret = main_program();
-    handle_argerror(USAGE, ret).unwrap_or(ExitCode::FAILURE)
+    main_support::print_any_errors(USAGE, ret)
 }
 
 #[derive(Debug)]
