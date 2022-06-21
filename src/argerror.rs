@@ -9,24 +9,40 @@ Error type for [`ArgSplitter`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum ArgError {
-    /// Argument could not be decoded as valid Unicode.
+    /// Not a real error, useful when handling `--help`. Returned when the
+    /// application has already printed usage info and should exit succesfully.
+    /// The helper functions in module [`main_support`][`crate::main_support`]
+    /// check for this and turn `Err(ArgError::ExitSuccesfully)` into
+    /// `Ok(ExitCode::SUCCESS)`.
+    ExitSuccessfully,
+
+    /// An argument could not be decoded as valid Unicode.
     InvalidUnicode(OsString),
+
+    /// Returned, usually through [`Item::unexpected`][`crate::Item::unexpected`]
+    /// or [`ItemOs::unexpected`][`crate::ItemOs::unexpected`],
+    /// when user code does not recognize a given flag.
+    UnexpectedFlag(String),
+
+    /// Returned by [`ArgSplitter::verify_no_more_stashed`]
+    /// if a stashed argument was found when no more arguments were expected.
+    UnexpectedArgument(OsString),
+
     /// Returned by [`ArgSplitter::item`] and [`ArgSplitter::item_os`]
-    /// if the previous long option has a parameter which has not been
+    /// if the previous long option had a parameter which has not been
     /// retrieved with [`ArgSplitter::param`], for example `--fruit=banana`.
     UnexpectedParameter(String),
-    /// Argument was
-    UnexpectedArgument(OsString),
+
     /// Returned by [`ArgSplitter::param`] and [`ArgSplitter::param_os`]
-    /// if no parameter is available, for example on `-f` in  `-f -v`.
+    /// if no parameter is available.
     ParameterMissing(String),
-    /// if a required argument is missing.
+
+    /// Returned by [`ArgSplitter::stashed`] and [`ArgSplitter::stashed_os`]
+    /// when another argument was requested but none is available.
     ArgumentMissing(String),
-    /// For use by user code
+
+    /// For use by user code, usually through [`ArgError::message`].
     ErrorMessage(String),
-    /// Not a real error, application should print usage info and exit
-    /// succesfully
-    ExitSuccessfully,
 }
 
 impl fmt::Display for ArgError {
@@ -42,6 +58,9 @@ impl fmt::Display for ArgError {
             UnexpectedArgument(arg) => {
                 write!(f, "unexpected argument: `{}`", arg.to_string_lossy())
             }
+            UnexpectedFlag(flag) => {
+                write!(f, "unexpected flag: `{}`", flag)
+            }
             ParameterMissing(flag) => write!(f, "parameter missing for flag `{}`", flag),
             ArgumentMissing(desc) => write!(f, "missing argument: {desc}"),
             ErrorMessage(msg) => write!(f, "{}", msg),
@@ -55,18 +74,22 @@ impl fmt::Display for ArgError {
 impl error::Error for ArgError {}
 
 impl ArgError {
+    /// Create an [`ArgError::ErrorMessage`].
     pub fn message(msg: impl fmt::Display) -> Self {
         ArgError::ErrorMessage(msg.to_string())
     }
 
+    /// Create an [`ArgError::UnexpectedFlag`].
     pub fn unknown_flag(flag: &str) -> Self {
-        ArgError::ErrorMessage(format!("Unexpected flag: {flag}"))
+        ArgError::UnexpectedFlag(flag.to_owned())
     }
 
+    /// Create an [`ArgError::UnexpectedArgument`].
     pub fn unexpected_argument(arg: impl AsRef<OsStr>) -> Self {
         ArgError::UnexpectedArgument(arg.as_ref().to_owned())
     }
 
+    /// Create an [`ArgError::ExitSuccessfully`].
     pub fn exit_successfully() -> Self {
         ArgError::ExitSuccessfully
     }

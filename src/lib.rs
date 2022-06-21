@@ -63,7 +63,7 @@ while let Some(item) = argsplitter.item()? {
         // Use param_os() to pick up file names:
         Item::Flag("-f" | "--file") => file = Some(argsplitter.param_os()?.into()),
         // Any other flag is an error
-        other => other.unexpected()?,
+        other => return Err(other.unexpected())?,
     }
 }
 assert_eq!(message, Some("hello".to_string()));
