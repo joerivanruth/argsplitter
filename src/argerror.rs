@@ -4,7 +4,7 @@ use std::{ffi::OsStr, fmt};
 #[cfg(doc)]
 use super::ArgSplitter;
 /**
-Error type for ``Splitter`].
+Error type for [`ArgSplitter`].
 */
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]

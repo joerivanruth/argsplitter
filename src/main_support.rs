@@ -1,3 +1,6 @@
+//! This module provides some helper functions that can help deal with
+//! [`ArgError`] and other errors in main.
+
 use std::{borrow::Borrow, error::Error, process::ExitCode};
 
 use crate::ArgError;
