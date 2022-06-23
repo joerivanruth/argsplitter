@@ -8,8 +8,7 @@ use crate::{core::Core, ArgSplitter};
 /// * Item returned from [`Core::take_item`]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OwnedItem {
-    /// An argument that didn't start with a dash, or the two special cases
-    /// `"-"` and `"--"`
+    /// An argument that didn't start with a dash, or the special case `"-"`
     Word(OsString),
     /// Long option such as --verbose or --file=data.csv
     Flag(String),

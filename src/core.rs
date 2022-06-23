@@ -34,12 +34,13 @@ impl ArgState {
 
         let (head, tail) = oschars::split_valid(s.as_os_str());
 
-        if head == "-" || head == "--" {
-            if tail.is_empty() {
-                return Word(head.into());
-            } else {
-                return CannotDecode(s);
-            }
+        let has_undecodable = !tail.is_empty();
+        match (head.as_str(), has_undecodable) {
+            // Special case
+            ("-", false) => return Word("-".into()),
+            // Flags must start with at least one decodable character
+            ("-" | "--", true) => return CannotDecode(s),
+            _ => {}
         }
 
         if head.starts_with("--") {
@@ -200,7 +201,6 @@ mod tests {
 
         assert_eq!(argstate(""), Word(os("")));
         assert_eq!(argstate("-"), Word(os("-")));
-        assert_eq!(argstate("--"), Word(os("--")));
         assert_eq!(ArgState::from(Some(bad())), Word(bad()));
 
         assert_eq!(argstate("--foo"), LongOption("--foo".into(), None));
@@ -213,6 +213,7 @@ mod tests {
             argstate("--foo=bar=baz"),
             LongOption("--foo".into(), Some(os("bar=baz")))
         );
+        assert_eq!(argstate("--"), LongOption("--".into(), None));
         assert_eq!(
             ArgState::from(Some(badly("--foo=X"))),
             LongOption("--foo".into(), Some(badly("X")))
@@ -390,5 +391,16 @@ mod tests {
         assert_eq!(core.param_ready(), false);
         assert_eq!(core.clone().param(), None);
         assert_eq!(core.take_item(), Ok(None));
+    }
+
+    #[test]
+    fn test_dashes() {
+        let mut core = Core::new(vec![os("-"), os("--")]);
+
+        assert_eq!(core.take_item(), Ok(Some(OwnedItem::Word("-".into()))));
+        assert_eq!(
+            core.take_item(),
+            Ok(Some(OwnedItem::Flag("--".to_string())))
+        );
     }
 }
