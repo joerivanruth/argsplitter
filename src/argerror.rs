@@ -24,7 +24,7 @@ pub enum ArgError {
     /// when user code does not recognize a given flag.
     UnexpectedFlag(String),
 
-    /// Returned by [`ArgSplitter::verify_no_more_stashed`]
+    /// Returned by [`ArgSplitter::no_more_stashed`]
     /// if a stashed argument was found when no more arguments were expected.
     UnexpectedArgument(OsString),
 

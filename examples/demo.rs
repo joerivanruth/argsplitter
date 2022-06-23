@@ -48,7 +48,7 @@ fn main_program() -> Result<(), Box<dyn Error>> {
         source = Some(Source::Str(msg));
     }
     dest = argsplitter.stashed_os("OUTFILE")?.into();
-    argsplitter.verify_no_more_stashed()?;
+    argsplitter.no_more_stashed()?;
 
     println!("Hello! verbose={verbose} source={source:?} dest={dest:?}");
     Ok(())

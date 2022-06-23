@@ -111,28 +111,59 @@ impl ArgSplitter {
         Ok(Some(self.flag_ref()))
     }
 
-    pub fn stashed_arguments(&self) -> &[OsString] {
-        &self.stashed_args
-    }
-
-    pub fn stashed_os(&mut self, desc: impl AsRef<str>) -> AResult<OsString> {
+    fn take_stashed(&mut self) -> Option<OsString> {
         if self.stashed_args.is_empty() {
-            Err(ArgError::ArgumentMissing(desc.as_ref().to_owned()))
+            None
         } else {
-            Ok(self.stashed_args.remove(0))
+            Some(self.stashed_args.remove(0))
         }
     }
 
-    pub fn stashed(&mut self, desc: impl AsRef<str>) -> AResult<String> {
+    pub fn stashed_iter_os(&mut self) -> StashedOs {
+        StashedOs(self)
+    }
+
+    pub fn stashed_iter(&mut self) -> Stashed {
+        Stashed(self.stashed_iter_os())
+    }
+
+    pub fn stashed_os(&mut self, desc: &str) -> AResult<OsString> {
+        match self.take_stashed() {
+            Some(v) => Ok(v),
+            None => Err(ArgError::ArgumentMissing(desc.to_owned())),
+        }
+    }
+
+    pub fn stashed(&mut self, desc: &str) -> AResult<String> {
         self.stashed_os(desc).force_unicode()
     }
 
-    pub fn verify_no_more_stashed(&self) -> AResult<()> {
-        if let Some(a) = self.stashed_arguments().iter().next() {
-            Err(ArgError::UnexpectedArgument(a.clone()))
-        } else {
+    pub fn no_more_stashed(&self) -> AResult<()> {
+        if self.stashed_args.is_empty() {
             Ok(())
+        } else {
+            Err(ArgError::UnexpectedArgument(self.stashed_args[0].clone()))
         }
+    }
+}
+
+pub struct StashedOs<'a>(&'a mut ArgSplitter);
+
+impl Iterator for StashedOs<'_> {
+    type Item = OsString;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.take_stashed()
+    }
+}
+
+pub struct Stashed<'a>(StashedOs<'a>);
+
+impl Iterator for Stashed<'_> {
+    type Item = AResult<String>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.next().map(ForceUnicode::force_unicode)
     }
 }
 
