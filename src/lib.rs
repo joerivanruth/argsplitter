@@ -119,6 +119,20 @@ If we wouldn't have called it after `--file`, the next call would return an
 
 # Processing the flags first
 
+In many cases it is most convenient to first process all flags and then all
+words. Or first all flags up to a certain point and then all arguments up to that
+point. [`ArgSplitter::flag`] is a wrapper around [`ArgSplitter::item_os`] which
+returns only the flags and stashes all words in a special buffer. This also
+has the advantage that you do not have to include `ItemOs::Flag` in your match
+patterns. The stashed words can be retrieved at any time using the methods
+[`stashed`][`ArgSplitter::stashed`],
+[`stashed_os`][`ArgSplitter::stashed_os`],
+[`stashed_iter`][`ArgSplitter::stashed_iter`]
+and.
+[`stashed_iter_os`][`ArgSplitter::stashed_iter_os`].
+Also, [`ArgSplitter::no_more_stashed`] can be used to check all stashed items
+have been picked up. It returns `Err(ArgError::UnexpectedArgument)` if any remain.
+
  */
 use std::ffi::{OsStr, OsString};
 
@@ -135,13 +149,13 @@ pub use item::{Item, ItemOs};
 pub use splitter::ArgSplitter;
 
 trait ForceUnicode {
-    type Forced;
+    type Becomes;
 
-    fn force_unicode(self) -> Result<Self::Forced, ArgError>;
+    fn force_unicode(self) -> Result<Self::Becomes, ArgError>;
 }
 
 impl ForceUnicode for OsString {
-    type Forced = String;
+    type Becomes = String;
 
     fn force_unicode(self) -> Result<String, ArgError> {
         match self.to_str() {
@@ -152,7 +166,7 @@ impl ForceUnicode for OsString {
 }
 
 impl<'a> ForceUnicode for &'a OsStr {
-    type Forced = &'a str;
+    type Becomes = &'a str;
 
     fn force_unicode(self) -> Result<&'a str, ArgError> {
         match self.to_str() {
@@ -163,9 +177,9 @@ impl<'a> ForceUnicode for &'a OsStr {
 }
 
 impl<'a> ForceUnicode for ItemOs<'a> {
-    type Forced = Item<'a>;
+    type Becomes = Item<'a>;
 
-    fn force_unicode(self) -> Result<Self::Forced, ArgError> {
+    fn force_unicode(self) -> Result<Self::Becomes, ArgError> {
         match self {
             ItemOs::Flag(f) => Ok(Item::Flag(f)),
             ItemOs::Word(w) => Ok(Item::Word(w.force_unicode()?)),
@@ -174,9 +188,9 @@ impl<'a> ForceUnicode for ItemOs<'a> {
 }
 
 impl<T: ForceUnicode> ForceUnicode for Option<T> {
-    type Forced = Option<<T as ForceUnicode>::Forced>;
+    type Becomes = Option<<T as ForceUnicode>::Becomes>;
 
-    fn force_unicode(self) -> Result<Self::Forced, ArgError> {
+    fn force_unicode(self) -> Result<Self::Becomes, ArgError> {
         match self {
             None => Ok(None),
             Some(v) => Ok(Some(v.force_unicode()?)),
@@ -185,9 +199,9 @@ impl<T: ForceUnicode> ForceUnicode for Option<T> {
 }
 
 impl<T: ForceUnicode> ForceUnicode for Result<T, ArgError> {
-    type Forced = <T as ForceUnicode>::Forced;
+    type Becomes = <T as ForceUnicode>::Becomes;
 
-    fn force_unicode(self) -> Result<Self::Forced, ArgError> {
+    fn force_unicode(self) -> Result<Self::Becomes, ArgError> {
         self.and_then(|v| v.force_unicode())
     }
 }
