@@ -9,7 +9,7 @@ type AResult<T> = Result<T, ArgError>;
 
 #[derive(Debug, Clone)]
 pub struct ArgSplitter {
-    pub argv0: Option<OsString>,
+    argv0: Option<OsString>,
     core: Core,
     last_flag: Option<String>,
     stashed_args: Vec<OsString>,
@@ -18,18 +18,15 @@ pub struct ArgSplitter {
 impl ArgSplitter {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        let mut args = env::args_os();
-        let argv0 = args.next();
-        let mut splitter = ArgSplitter::from(args);
-        splitter.argv0 = argv0;
-        splitter
+        Self::from(env::args_os())
     }
 
-    pub fn from<S: AsRef<OsStr>>(args: impl IntoIterator<Item = S>) -> Self {
-        let vec = args.into_iter().map(|s| s.as_ref().to_owned()).collect();
-        let core = Core::new(vec);
+    pub fn from<S: AsRef<OsStr>>(argv: impl IntoIterator<Item = S>) -> Self {
+        let mut args = argv.into_iter().map(|s| s.as_ref().to_owned());
+        let argv0 = args.next();
+        let core = Core::new(args.collect());
         ArgSplitter {
-            argv0: None,
+            argv0,
             core,
             last_flag: None,
             stashed_args: vec![],
@@ -42,6 +39,10 @@ impl ArgSplitter {
 }
 
 impl ArgSplitter {
+    pub fn argv0(&self) -> Option<&OsStr> {
+        self.argv0.as_deref()
+    }
+
     pub fn item_os(&mut self) -> AResult<Option<ItemOs>> {
         self.last_flag = None;
 
@@ -173,20 +174,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_empty() {
+    fn test_completely_empty() {
         let empty: Vec<OsString> = vec![];
         let mut sp = ArgSplitter::from(empty);
 
+        assert_eq!(sp.argv0(), None);
         assert_eq!(sp.has_param_attached(), false);
-
         assert_eq!(sp.item_os(), Ok(None));
+        assert_eq!(sp.has_param_attached(), false);
+    }
 
+    #[test]
+    fn test_no_args() {
+        let empty: Vec<OsString> = vec!["test".into()];
+        let mut sp = ArgSplitter::from(empty);
+
+        assert_eq!(sp.argv0(), Some(OsStr::new("test")));
+        assert_eq!(sp.has_param_attached(), false);
+        assert_eq!(sp.item_os(), Ok(None));
         assert_eq!(sp.has_param_attached(), false);
     }
 
     #[test]
     fn test_split_short() {
-        let mut sp = ArgSplitter::from(["-vx", "-n", "ARGS"]);
+        let mut sp = ArgSplitter::from(["test", "-vx", "-n", "ARGS"]);
 
         assert_eq!(sp.has_param_attached(), false);
 
@@ -212,7 +223,7 @@ mod tests {
 
     #[test]
     fn test_split_long() {
-        let mut sp = ArgSplitter::from(["--foo", "--bar=BAR", "--baz", "ARGS"]);
+        let mut sp = ArgSplitter::from(["test", "--foo", "--bar=BAR", "--baz", "ARGS"]);
 
         assert_eq!(sp.has_param_attached(), false);
 
