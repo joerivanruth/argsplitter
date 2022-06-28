@@ -128,7 +128,7 @@ patterns. The stashed words can be retrieved at any time using the methods
 [`stashed`][`ArgSplitter::stashed`],
 [`stashed_os`][`ArgSplitter::stashed_os`],
 [`stashed_args`][`ArgSplitter::stashed_args`]
-and.
+and
 [`stashed_args_os`][`ArgSplitter::stashed_args_os`].
 Also, [`ArgSplitter::no_more_stashed`] can be used to check all stashed items
 have been picked up. It returns `Err(ArgError::UnexpectedArgument)` if any remain.
