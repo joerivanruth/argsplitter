@@ -157,7 +157,7 @@ impl ArgSplitter {
     /// Returns them as an `Option<&str>` rather than [`Item`] or [`ItemOs`]
     /// for better match ergomics.
     /// All non-flag arguments are stashed in a buffer from which they can
-    /// be retrieved using 
+    /// be retrieved using
     /// [`stashed`][`ArgSplitter::stashed`],
     /// [`stashed_os`][`ArgSplitter::stashed_os`],
     /// [`stashed_args`][`ArgSplitter::stashed_args`] or

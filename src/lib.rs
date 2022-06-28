@@ -148,9 +148,16 @@ pub use argerror::ArgError;
 pub use item::{Item, ItemOs};
 pub use splitter::ArgSplitter;
 
-trait ForceUnicode {
+/// Helper trait for converting `ItemOs` to `Item`, `Option<ItemOs>` to
+/// `Option<Item>`, etc. The result is wrapped in `Result<_,ArgError>` unless
+/// it already is.
+/// Mostly for internal use but may occasionally come in
+/// handy in application code.
+pub trait ForceUnicode {
+    /// The exact type the item is converted to.
     type Becomes;
 
+    /// Change the [`OsString`] based value to be [`String`] based.
     fn force_unicode(self) -> Result<Self::Becomes, ArgError>;
 }
 
@@ -199,6 +206,8 @@ impl<T: ForceUnicode> ForceUnicode for Option<T> {
 }
 
 impl<T: ForceUnicode> ForceUnicode for Result<T, ArgError> {
+    /// As the argument already is a `Result<T,ArgError>` we do not have
+    /// add another layer of `Result`.
     type Becomes = <T as ForceUnicode>::Becomes;
 
     fn force_unicode(self) -> Result<Self::Becomes, ArgError> {
