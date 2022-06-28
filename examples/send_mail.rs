@@ -31,11 +31,17 @@ fn work() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    let mut recipients = vec![argsplitter.stashed("RECIPIENT")?];
-    // .collect is inconvenient because we need to get rid of the Result<_,ArgError>.
-    for a in argsplitter.stashed_iter() {
-        recipients.push(a?);
-    }
+    // this is how you pick up stashed_args
+    let recipients = argsplitter
+        .clone()
+        .stashed_args(1, "RECIPIENTS")
+        .collect::<Result<Vec<_>, _>>()?;
+
+    // this is how you pick up stashed_args_os
+    let x = argsplitter
+        .stashed_args_os(1, "RECIPIENTS")?
+        .collect::<Vec<_>>();
+    let _ = x;
 
     println!("Verbose={verbose} recipients={recipients:?} attachments={attachments:?}");
     Ok(())

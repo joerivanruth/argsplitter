@@ -120,14 +120,6 @@ impl ArgSplitter {
         }
     }
 
-    pub fn stashed_iter_os(&mut self) -> StashedOs {
-        StashedOs(self)
-    }
-
-    pub fn stashed_iter(&mut self) -> Stashed {
-        Stashed(self.stashed_iter_os())
-    }
-
     pub fn stashed_os(&mut self, desc: &str) -> AResult<OsString> {
         match self.take_stashed() {
             Some(v) => Ok(v),
@@ -137,6 +129,26 @@ impl ArgSplitter {
 
     pub fn stashed(&mut self, desc: &str) -> AResult<String> {
         self.stashed_os(desc).force_unicode()
+    }
+
+    pub fn stashed_args_os(&mut self, expect_at_least: usize, desc: &str) -> AResult<StashedOs> {
+        if self.stashed_args.len() >= expect_at_least {
+            Ok(StashedOs(self))
+        } else {
+            Err(ArgError::ArgumentMissing(desc.to_owned()))
+        }
+    }
+
+    pub fn stashed_args(&mut self, expect_at_least: usize, desc: &str) -> Stashed {
+        let err = if self.stashed_args.len() >= expect_at_least {
+            None
+        } else {
+            Some(ArgError::ArgumentMissing(desc.to_owned()))
+        };
+        Stashed {
+            splitter: self,
+            err,
+        }
     }
 
     pub fn no_more_stashed(&self) -> AResult<()> {
@@ -158,13 +170,22 @@ impl Iterator for StashedOs<'_> {
     }
 }
 
-pub struct Stashed<'a>(StashedOs<'a>);
+pub struct Stashed<'a> {
+    splitter: &'a mut ArgSplitter,
+    err: Option<ArgError>,
+}
 
 impl Iterator for Stashed<'_> {
     type Item = AResult<String>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(ForceUnicode::force_unicode)
+        if let Some(ref err) = self.err {
+            Some(Err(err.clone()))
+        } else {
+            self.splitter
+                .take_stashed()
+                .map(ForceUnicode::force_unicode)
+        }
     }
 }
 
