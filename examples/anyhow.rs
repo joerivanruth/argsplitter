@@ -19,7 +19,7 @@ fn main() -> ExitCode {
 }
 
 fn my_main() -> anyhow::Result<()> {
-    let mut argsplitter = ArgSplitter::new();
+    let mut argsplitter = ArgSplitter::from_env();
 
     if let Some(a) = argsplitter.item_os()? {
         Err(a.unexpected())?

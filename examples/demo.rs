@@ -28,7 +28,7 @@ fn main_program() -> Result<(), Box<dyn Error>> {
     let mut source: Option<Source> = None;
     let dest: PathBuf;
 
-    let mut argsplitter = ArgSplitter::new();
+    let mut argsplitter = ArgSplitter::from_env();
 
     while let Some(f) = argsplitter.flag()? {
         match f {

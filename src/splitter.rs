@@ -22,7 +22,7 @@ impl ArgSplitter {
     /// through [`ArgSplitter::argv0`], the rest are arguments and can be accessed
     /// through [`ArgSplitter::item`], [`ArgSplitter::item_os`] and [`ArgSplitter::flag`].
     #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
+    pub fn from_env() -> Self {
         Self::from(env::args_os())
     }
 

@@ -7,7 +7,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut files: Vec<PathBuf> = vec![];
     let mut mode = "default".to_string();
 
-    let mut args = ArgSplitter::new();
+    let mut args = ArgSplitter::from_env();
 
     use ItemOs::*;
     while let Some(item) = args.item_os()? {

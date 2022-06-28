@@ -17,7 +17,7 @@ fn work() -> Result<(), Box<dyn Error>> {
     let mut attachments: Vec<PathBuf> = vec![];
     let mut verbose = false;
 
-    let mut argsplitter = ArgSplitter::new();
+    let mut argsplitter = ArgSplitter::from_env();
 
     while let Some(flag) = argsplitter.flag()? {
         match flag {
