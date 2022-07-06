@@ -397,4 +397,48 @@ mod tests {
         assert_eq!(sp.has_param_attached(), false);
         // must not call .parm after getting a Word.
     }
+
+    #[test]
+    fn test_flag() {
+        let mut sp = ArgSplitter::from(["testprog", "a", "-fFILE", "b", "--", "c"]);
+
+        assert_eq!(sp.flag(), Ok(Some("-f")));
+        assert_eq!(sp.param(), Ok("FILE".into()));
+        assert_eq!(sp.flag(), Ok(Some("--")));
+
+        // It should have collected a and b, but not c
+        let mut sp2 = sp.clone();
+        assert!(sp2.stashed_args_os(3, "STASHED").is_err());
+        assert!(sp2.stashed_args_os(2, "STASHED").is_ok());
+        // they have not been consumed:
+        assert!(sp2.stashed_args_os(2, "STASHED").is_ok());
+        // Note: Result outside next's Option
+        assert_eq!(
+            sp2.stashed_args_os(0, "STASHED").unwrap().next(),
+            Some("a".into())
+        );
+        assert_eq!(sp2.stashed_os("STASHED"), Ok("b".into()));
+        // No more..
+        assert_eq!(sp2.stashed_args_os(0, "STASHED").unwrap().next(), None);
+        assert_eq!(
+            sp2.stashed_os("STASHED"),
+            Err(ArgError::ArgumentMissing("STASHED".into()))
+        );
+
+        // Again, but without the _os
+        // Result is now inside next's Option
+        assert!(sp.stashed_args(3, "STASHED").next().unwrap().is_err());
+        assert_eq!(sp.stashed_args(2, "STASHED").next(), Some(Ok("a".into())));
+        assert_eq!(sp.stashed("STASHED"), Ok("b".into()));
+        // No more..
+        assert_eq!(sp.stashed_args(0, "STASHED").next(), None);
+        assert_eq!(
+            sp.stashed_args(1, "STASHED").next(),
+            Some(Err(ArgError::ArgumentMissing("STASHED".into())))
+        );
+        assert_eq!(
+            sp.stashed("STASHED"),
+            Err(ArgError::ArgumentMissing("STASHED".into()))
+        );
+    }
 }
