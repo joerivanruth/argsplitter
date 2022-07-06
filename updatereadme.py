@@ -5,7 +5,7 @@ from subprocess import PIPE
 from typing import Optional
 
 README_FILE = 'README.md'
-DEMO_FILE = 'examples/demo.rs'
+DEMO_FILE = 'examples/send_mail.rs'
 
 
 class Cursor:
@@ -53,6 +53,11 @@ class Cursor:
 
 def run_example(cmd: str):
     s = ""
+    parts = cmd.split(' ', 2)
+    exe = parts[0]
+    args = ' '.join(parts[1:]) if len(parts) > 1 else ""
+    cmd = f"cargo run -q --example={exe} -- {args}"
+    # s += f"-- cmd {cmd!r} --\n"
     p = subprocess.run(cmd, shell=True, stderr=PIPE, stdout=PIPE)
 
     if p.stdout:
@@ -73,7 +78,7 @@ while c.cur is not None:
         while not c.cur.startswith("```"):
             c.remove()
         c.next()
-    if c.cur.startswith("» cargo run "):
+    if c.cur.startswith("» "):
         cmd = c.cur[2:].strip()
         c.next()
         while not c.cur.startswith("```"):

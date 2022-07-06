@@ -3,9 +3,13 @@
 Helper crate for parsing command line arguments
 
 Crates such as [clap] allow you to create a command-line parser with many bells
-and whistles such as automatically parsing the configuration into a struct,
-generating help text or even starting with the help text and  deriving the
-command-line parser from that.
+and whistles. For example,
+
+* automatically parsing the configuration into a struct,
+* generating help text,
+* or even starting with the help text and deriving the command-line
+  parser from that.
+
 The downside is that to cover all possibilities the API has to be quite large
 and elaborate and you have to do quite some learning, documentation reading and
 tinkering to get it to do what you want. Moreover, you forget and then have to
@@ -17,15 +21,27 @@ The main aim of the `argsplitter` crate is that it should take only a few minute
 to be productive again when coming back after not using it for a while. It tries
 to make it easy to process command-line flags using Rust's `match` statement and
 it tries to help correctly deal with arguments that have an invalid Unicode
-encoding.
+encoding. As such, it only provides the following services:
 
-**A note about encodings:** Rust strings are defined to be encoded as UTF-8 but both
-Unix and Windows allow file names and command-line arguments that are not Unicode.
-For these, Rust provides [`OsString`] which is less convenient to work with than
-[`String`] but can represent everything.
-In the `argsplitter` API, methods suffixed with `_os` have return
-types based on [`OsString`] and the others are based on [`String`].
-You can switch back and forth between these variants as required.
+1) Splitting combined single-dash flags such as `-xvf` into separate flags `-x`,
+   `-v` and `-f`.
+
+2) Dealing with flags arguments such as `-fbanana` or `--fruit=banana`.
+   The latter may or may not be equivalent with `--fruit banana`.
+
+3) Correctly dealing with non-unicode arguments such as filenames, while
+   still working with regular strings wherever possible.
+   This is important because both Unix and Windows allow file names which
+   cannot be represented as UTF-8 encoded strings.
+
+**A note about encodings:** Item 3) is important because Rust strings are
+defined to be encoded as UTF-8 but both Unix and Windows allow file names and
+command-line arguments that are not Unicode. For these, Rust provides
+[`OsString`] which is less convenient to work with than [`String`] but can
+represent everything. In the `argsplitter` API, methods suffixed with `_os` have
+return types based on [`OsString`] and the others are based on [`String`]. You
+can switch back and forth between these variants as required.
+
 
 # Overview
 
@@ -43,6 +59,7 @@ First you construct an [`ArgSplitter`] and then you repeatedly call the methods
 [`param()`][`ArgSplitter::param`] or [`param_os()`][`ArgSplitter::param_os`],
 and [`flag()`][`ArgSplitter::flag`]
 to consume options and words from the commandline.
+
 
 For example,
 
