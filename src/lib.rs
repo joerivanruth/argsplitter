@@ -158,7 +158,6 @@ pub mod main_support;
 mod argerror;
 mod core;
 mod item;
-mod oschars;
 mod splitter;
 
 pub use argerror::ArgError;

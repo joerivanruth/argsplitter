@@ -1,6 +1,6 @@
-use std::{ffi::OsString, mem, vec};
+use std::{ffi::{OsStr, OsString}, mem, vec};
 
-use crate::{item::OwnedItem, oschars, ArgError};
+use crate::{item::OwnedItem, ArgError};
 
 type AResult<T> = Result<T, ArgError>;
 
@@ -32,7 +32,21 @@ impl ArgState {
             None => return End,
         };
 
-        let (head, tail) = oschars::split_valid(s.as_os_str());
+        let encoded = s.as_encoded_bytes();
+        let (head, tail) = match std::str::from_utf8(encoded) {
+            Ok(s) => (s, OsStr::new("")),
+            Err(e) => {
+                let (h, t) = encoded.split_at(e.valid_up_to());
+                let head = std::str::from_utf8(h).unwrap();
+                let tail = unsafe {
+                    // safe because e.valid_up_to() is on a utf-8 boundary.
+                    OsStr::from_encoded_bytes_unchecked(t)
+                };
+                (head, tail)
+            }
+        };
+        let head = head.to_owned();
+        let tail = tail.to_owned();
 
         let has_undecodable = !tail.is_empty();
         match (head.as_str(), has_undecodable) {
@@ -173,9 +187,19 @@ impl Core {
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod tests {
-    use crate::oschars::badly_encoded;
-
     use super::*;
+
+    #[cfg(not(windows))]
+    fn badly_encoded_text() -> OsString {
+        use std::os::unix::ffi::OsStringExt;
+        OsString::from_vec(b"\x80BAD".into())
+    }
+
+    #[cfg(windows)]
+    fn badly_encoded_text() -> OsString {
+        use std::os::windows::ffi::OsStringExt;
+        OsString::from_wide(&[0xD800, 0xD840, 0x42, 0x41, 0x44])
+    }
 
     fn argstate(s: &str) -> ArgState {
         ArgState::from(Some(s.into()))
@@ -189,7 +213,7 @@ mod tests {
     fn test_argstate() {
         fn badly(prefix: &str) -> OsString {
             let mut ret = OsString::from(prefix);
-            ret.push(badly_encoded());
+            ret.push(badly_encoded_text());
             ret
         }
 
