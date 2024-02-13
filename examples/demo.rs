@@ -26,7 +26,7 @@ enum Source {
 fn main_program() -> Result<(), Box<dyn Error>> {
     let mut verbose = false;
     let mut source: Option<Source> = None;
-    let dest: PathBuf;
+    
 
     let mut argsplitter = ArgSplitter::from_env();
 
@@ -35,7 +35,7 @@ fn main_program() -> Result<(), Box<dyn Error>> {
             "-h" | "help" => {
                 // to stdout
                 println!("{}", USAGE.trim());
-                return Err(ArgError::ExitSuccessfully)?;
+                return Err(ArgError::ExitSuccessfully.into());
             }
             "-v" | "--verbose" => verbose = true,
             "-f" | "--file" => source = Some(Source::File(argsplitter.param_os()?.into())),
@@ -47,7 +47,7 @@ fn main_program() -> Result<(), Box<dyn Error>> {
         let msg = argsplitter.stashed("MESSAGE")?;
         source = Some(Source::Str(msg));
     }
-    dest = argsplitter.stashed_os("OUTFILE")?.into();
+    let dest: PathBuf = argsplitter.stashed_os("OUTFILE")?.into();
     argsplitter.no_more_stashed()?;
 
     println!("Hello! verbose={verbose} source={source:?} dest={dest:?}");

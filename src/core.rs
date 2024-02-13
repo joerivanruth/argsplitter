@@ -155,7 +155,7 @@ impl Core {
                 ArgState::from(self.rest.next())
             }
             ShortOptionsUsed(f, more, tail) => {
-                let s: String = [f].into_iter().chain(more.into_iter()).collect();
+                let s: String = [f].into_iter().chain(more).collect();
                 let mut p: OsString = s.into();
                 p.push(tail);
                 ret = Some(p);

@@ -27,7 +27,7 @@ fn work() -> Result<(), Box<dyn Error>> {
         match flag {
             "-h" | "--help" => {
                 println!("{}", USAGE.trim());
-                return Err(ArgError::exit_successfully())?;
+                return Err(ArgError::exit_successfully().into());
             }
 
             "-v" | "--verbose" => verbose = true,
